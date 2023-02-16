@@ -10,19 +10,54 @@ app.use(cors());
 const users = [];
 
 function checksExistsUserAccount(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers;
+  const user = users.find((user) => user.username === username);
+  if (user) {
+    request.user = user;
+    return next()
+  }
+  return response.status(404).json({ error: "Customer not found" })
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
-  // Complete aqui
+  const { user } = request;
+  const createTodosUserAvaiable = user.pro || (user.todos.length < 10)
+  if (createTodosUserAvaiable) {
+    return next()
+  }
+  return response.status(403).json({ error: "Customer not be able to create a new todo" })
 }
 
 function checksTodoExists(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers;
+  const user = users.find((user) => user.username === username);
+  if (!user) {
+    return response.status(404).json({ error: "Customer not found" })
+  }
+
+  const { id } = request.params;
+  const idIsntUuid = !validate(id)
+  if(idIsntUuid) return response.status(400).json({ error: "Id not valid" })
+  
+  const todo = user.todos.find((todo) => todo.id === id);
+  if (todo) {
+    request.todo = todo;
+    request.user = user;
+    return next()
+  }
+  return response.status(404).json({ error: "Todo not found" })
 }
 
 function findUserById(request, response, next) {
-  // Complete aqui
+  const { id } = request.params;
+  const idIsntUuid = !validate(id)
+  if(idIsntUuid) return response.status(400).json({ error: "Id not valid" })
+  const user = users.find((user) => user.id === id);
+  if (user) {
+    request.user = user;
+    return next()
+  }
+  return response.status(404).json({ error: "Customer not found" })
 }
 
 app.post('/users', (request, response) => {
